@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://travelbuddy-backend-l8bu.onrender.com",
+  baseURL: "https://travelbuddy-backend-l8bu.onrender.com/api/v1",
 });
 
 //Attach token automatically
