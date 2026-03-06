@@ -6,7 +6,7 @@ import CreateTrip from "./pages/CreateTrip";
 import TripDetails from "./pages/TripDetails";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
-import MyTrips from "./pages/Mytrips";
+import MyTrips from "./pages/MyTrips";
 
 function App() {
   return (
