@@ -13,11 +13,22 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      await API.post("/auth/register", form);
-      alert("Registered successfully!");
+      const res = await API.post("/auth/register", form);
+
+      // ✅ If backend sends token → store it
+      if (res.data?.token) {
+        localStorage.setItem("token", res.data.token);
+      }
+
+      alert(res.data?.message || "Registered successfully!");
+
+      // ✅ Go to dashboard OR login (your choice)
       navigate("/login");
+
     } catch (err) {
+      console.log(err.response?.data || err.message);
       alert(err.response?.data?.message || "Registration failed");
     }
   };

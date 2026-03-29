@@ -1,57 +1,79 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const Schema = mongoose.Schema;
-
-const userSchema = new mongoose.Schema({
-    role:{
-        type:String,
-        enum:['user','admin'],
-        default:'user'
-    },
-    name:{
-        type:String,
-        required:true
-    },
-    email:{
-        type:String,
-        required:true,
-        unique:true,
-        lowercase:true,
-        index : true
-    },
-    password:{
-        type:String,
-        required:true,
-        select:false
+const userSchema = new mongoose.Schema(
+  {
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user"
     },
 
-    //for profile
-    avatar:{
-        type:String
-    },
-    bio:{
-        type:String
+    name: {
+      type: String,
+      required: true,
+      trim: true
     },
 
-    //ratings and reviews
-    ratings :{
-        type:Number,
-        default:0
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      index: true
     },
-    totalReviews:{
-        type:Number,
-        default:0
+
+    password: {
+      type: String,
+      required: true,
+      select: false
+    },
+
+    // ✅ Profile
+    avatar: {
+      type: String,
+      default: ""
+    },
+
+    bio: {
+      type: String,
+      default: ""
+    },
+
+    // 🔥 NEW: Interests (VERY IMPORTANT)
+    interests: {
+      type: [String],
+      default: []
+    },
+
+    // 🔥 NEW: Budget preference
+    budgetRange: {
+      type: String,
+      enum: ["low", "medium", "high"],
+      default: "medium"
+    },
+
+    // ✅ Ratings
+    ratings: {
+      type: Number,
+      default: 0
+    },
+
+    totalReviews: {
+      type: Number,
+      default: 0
     },
 
     isVerified: {
-        type: Boolean,
-        default: false 
+      type: Boolean,
+      default: false
     },
+
     isBlocked: {
-        type: Boolean,
-        default: false 
-    }  
+      type: Boolean,
+      default: false
+    }
+  },
+  { timestamps: true }
+);
 
-},{ timestamps: true })
-
-module.exports = mongoose.model('User',userSchema);
+module.exports = mongoose.model("User", userSchema);

@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import API from "../api/axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
 const CreateTrip = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const isEditMode = Boolean(id);
+  const [imageFile, setImageFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [trip, setTrip] = useState({
     title: "",
     description: "",
@@ -11,20 +18,101 @@ const CreateTrip = () => {
     startDate: "",
     endDate: "",
     budget: "",
+    budgetRange: "medium", // 🔥 NEW
+    interests: "", // 🔥 NEW (string)
+    image: "", // 🔥 NEW
     maxParticipants: "",
+    currentMembers: "1",
   });
 
-  const navigate = useNavigate();
+  // ✅ FETCH TRIP (EDIT MODE)
+  useEffect(() => {
+    if (!isEditMode) return;
 
+    const fetchTrip = async () => {
+      try {
+        const res = await API.get(`/trips/${id}`);
+        const data = res.data.data;
+
+        setTrip({
+          title: data.title || "",
+          description: data.description || "",
+          destination: data.destination || "",
+          startDate: data.startDate?.split("T")[0] || "",
+          endDate: data.endDate?.split("T")[0] || "",
+          budget: data.budget || "",
+          budgetRange: data.budgetRange || "medium",
+          interests: data.interests?.join(", ") || "",
+          image: data.image || "",
+          maxParticipants: data.maxParticipants || "",
+          currentMembers: data.currentMembers || "1",
+        });
+      } catch (err) {
+        console.log(err.response?.data?.message);
+        alert("Failed to load trip details");
+      }
+    };
+
+    fetchTrip();
+  }, [id, isEditMode]);
+
+  // ✅ HANDLE CHANGE
+  const handleChange = (field, value) => {
+    setTrip((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  // ✅ HANDLE SUBMIT
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
 
     try {
-      await API.post("/trips", trip);
-      alert("Trip Created Successfully!");
+      const formData = new FormData();
+      formData.append("title", trip.title);
+      formData.append("description", trip.description);
+      formData.append("destination", trip.destination);
+      formData.append("startDate", trip.startDate);
+      formData.append("endDate", trip.endDate);
+      formData.append("budget", trip.budget);
+      formData.append("budgetRange", trip.budgetRange);
+      formData.append("maxParticipants", trip.maxParticipants);
+      formData.append("currentMembers", trip.currentMembers);
+      
+      const interestsArray = trip.interests
+        .split(",")
+        .map((i) => i.trim())
+        .filter((i) => i);
+        
+      interestsArray.forEach(interest => formData.append("interests", interest));
+
+      if (imageFile) {
+        formData.append("image", imageFile);
+      } else if (trip.image) {
+        formData.append("image", trip.image);
+      }
+
+      if (isEditMode) {
+        await API.patch(`/trips/${id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+        alert("Trip Updated Successfully!");
+      } else {
+        await API.post("/trips", formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+        alert("Trip Created Successfully!");
+      }
+
       navigate("/dashboard");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to create trip");
+      alert(err.response?.data?.message || "Operation failed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -35,11 +123,11 @@ const CreateTrip = () => {
       <div className="flex justify-center items-center py-12 px-4">
         <div className="bg-white shadow-xl rounded-2xl w-full max-w-2xl p-8">
           <h2 className="text-3xl font-bold text-slate-800 text-center mb-8">
-            Create a New Trip
+            {isEditMode ? "Edit Trip" : "Create a New Trip"}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            
+
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-slate-600 mb-1">
@@ -47,10 +135,9 @@ const CreateTrip = () => {
               </label>
               <input
                 required
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
-                onChange={(e) =>
-                  setTrip({ ...trip, title: e.target.value })
-                }
+                value={trip.title}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg"
+                onChange={(e) => handleChange("title", e.target.value)}
               />
             </div>
 
@@ -61,10 +148,9 @@ const CreateTrip = () => {
               </label>
               <input
                 required
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
-                onChange={(e) =>
-                  setTrip({ ...trip, destination: e.target.value })
-                }
+                value={trip.destination}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg"
+                onChange={(e) => handleChange("destination", e.target.value)}
               />
             </div>
 
@@ -76,79 +162,111 @@ const CreateTrip = () => {
               <textarea
                 required
                 rows="4"
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none resize-none"
+                value={trip.description}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg resize-none"
+                onChange={(e) => handleChange("description", e.target.value)}
+              />
+            </div>
+
+            {/* Dates */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <input
+                type="date"
+                required
+                value={trip.startDate}
+                className="w-full px-4 py-2 border rounded-lg"
+                onChange={(e) => handleChange("startDate", e.target.value)}
+              />
+              <input
+                type="date"
+                required
+                value={trip.endDate}
+                className="w-full px-4 py-2 border rounded-lg"
+                onChange={(e) => handleChange("endDate", e.target.value)}
+              />
+            </div>
+
+            {/* Budget & Participants */}
+            <div className="grid md:grid-cols-3 gap-6">
+              <input
+                type="number"
+                placeholder="Budget"
+                value={trip.budget}
+                className="w-full px-4 py-2 border rounded-lg"
+                onChange={(e) => handleChange("budget", e.target.value)}
+              />
+              <input
+                type="number"
+                placeholder="Max Participants"
+                value={trip.maxParticipants}
+                className="w-full px-4 py-2 border rounded-lg"
                 onChange={(e) =>
-                  setTrip({ ...trip, description: e.target.value })
+                  handleChange("maxParticipants", e.target.value)
+                }
+              />
+              <input
+                type="number"
+                placeholder="Current Members"
+                value={trip.currentMembers}
+                min="1"
+                className="w-full px-4 py-2 border rounded-lg"
+                onChange={(e) =>
+                  handleChange("currentMembers", e.target.value)
                 }
               />
             </div>
 
-            {/* Dates Row */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1">
-                  Start Date(Expected)
-                </label>
-                <input
-                  type="date"
-                  required
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
-                  onChange={(e) =>
-                    setTrip({ ...trip, startDate: e.target.value })
-                  }
-                />
-              </div>
+            {/* 🔥 Budget Range */}
+            <select
+              value={trip.budgetRange}
+              className="w-full px-4 py-2 border rounded-lg"
+              onChange={(e) =>
+                handleChange("budgetRange", e.target.value)
+              }
+            >
+              <option value="low">Low Budget</option>
+              <option value="medium">Medium Budget</option>
+              <option value="high">High Budget</option>
+            </select>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1">
-                  End Date(Expected)
-                </label>
-                <input
-                  type="date"
-                  required
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
-                  onChange={(e) =>
-                    setTrip({ ...trip, endDate: e.target.value })
-                  }
-                />
-              </div>
-            </div>
+            {/* 🔥 Interests */}
+            <input
+              value={trip.interests}
+              placeholder="Interests (e.g. hiking, beach)"
+              className="w-full px-4 py-2 border rounded-lg"
+              onChange={(e) =>
+                handleChange("interests", e.target.value)
+              }
+            />
 
-            {/* Budget & Max Participants */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1">
-                  Budget (₹ per person)
-                </label>
-                <input
-                  type="number"
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
-                  onChange={(e) =>
-                    setTrip({ ...trip, budget: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1">
-                  Max Participants
-                </label>
-                <input
-                  type="number"
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
-                  onChange={(e) =>
-                    setTrip({ ...trip, maxParticipants: e.target.value })
-                  }
-                />
-              </div>
+            {/* 🔥 Image */}
+            <div>
+              <label className="block text-sm font-medium text-slate-600 mb-1">
+                Trip Image
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                className="w-full px-4 py-2 border rounded-lg"
+                onChange={(e) => setImageFile(e.target.files[0])}
+              />
+              {trip.image && !imageFile && isEditMode && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Current: <a href={trip.image} target="_blank" rel="noreferrer" className="text-blue-500 underline">View Image</a>
+                </p>
+              )}
             </div>
 
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+              disabled={isSubmitting}
+              className={`w-full text-white py-3 rounded-lg transition ${
+                isSubmitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              Create Trip
+              {isSubmitting ? "Processing..." : isEditMode ? "Update Trip" : "Create Trip"}
             </button>
+
           </form>
         </div>
       </div>

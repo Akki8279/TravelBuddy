@@ -7,6 +7,9 @@ import TripDetails from "./pages/TripDetails";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import MyTrips from "./pages/MyTrips";
+import Requests from "./pages/Requests";
+import MyRequests from "./pages/MyRequests";
+import ChatInbox from "./pages/ChatInbox"; // 🔥 NEW
 
 function App() {
   return (
@@ -37,6 +40,15 @@ function App() {
         />
 
         <Route
+          path="/edit-trip/:id"
+          element={
+            <ProtectedRoute>
+              <CreateTrip />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/created-trips"
           element={
             <ProtectedRoute>
@@ -46,10 +58,38 @@ function App() {
         />
 
         <Route
+          path="/requests"
+          element={
+            <ProtectedRoute>
+              <Requests />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/my-requests"
+          element={
+            <ProtectedRoute>
+              <MyRequests />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/trip/:id"
           element={
             <ProtectedRoute>
               <TripDetails />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 🔥 NEW MESSAGES PATH */}
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <ChatInbox />
             </ProtectedRoute>
           }
         />

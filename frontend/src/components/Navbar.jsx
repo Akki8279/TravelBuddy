@@ -38,10 +38,24 @@ const Navbar = () => {
           </Link>
 
           <Link
-            to="/dashboard"
+            to="/requests"
+            className="text-slate-700 hover:text-blue-600 transition"
+          >
+            Requests Received
+          </Link>
+          
+          <Link
+            to="/my-requests"
             className="text-slate-700 hover:text-blue-600 transition"
           >
             My Requests
+          </Link>
+
+          <Link
+            to="/messages"
+            className="text-slate-700 hover:text-blue-600 font-medium transition"
+          >
+            Messages
           </Link>
 
           <button
@@ -73,11 +87,19 @@ const Navbar = () => {
           </Link>
 
           <Link
-            to="/my-trips"
+            to="/created-trips"   
             className="block text-slate-700 hover:text-blue-600"
             onClick={() => setIsOpen(false)}
           >
             Created Trips
+          </Link>
+
+          <Link
+            to="/requests"
+            className="block text-slate-700 hover:text-blue-600"
+            onClick={() => setIsOpen(false)}
+          >
+            Requests Received
           </Link>
 
           <Link
@@ -88,8 +110,16 @@ const Navbar = () => {
             My Requests
           </Link>
 
+          <Link
+            to="/messages"
+            className="block text-slate-700 hover:text-blue-600 font-medium"
+            onClick={() => setIsOpen(false)}
+          >
+            Messages
+          </Link>
+
           <button
-            onClick={logout}
+            onClick={handleLogout}   
             className="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition"
           >
             Logout

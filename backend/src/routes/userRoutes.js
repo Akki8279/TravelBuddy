@@ -4,6 +4,8 @@ const router = express.Router();
 const userController = require("../controllers/userController");
 const { protect, restrictTo } = require("../middleware/authMiddleware");
 
+router.get("/me", protect, userController.getMe);
+
 // Get all users (Admin only)
 router.get("/", protect, restrictTo("admin"), userController.getAllUsers);
 // router.get("/", userController.getAllUsers);

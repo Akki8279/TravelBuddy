@@ -3,33 +3,36 @@ const router = express.Router();
 
 const tripController = require("../controllers/tripController");
 const { protect } = require("../middleware/authMiddleware");
+const upload = require("../middleware/uploadMiddleware");
 
-// Create trip
-router.post("/", protect, tripController.createTrip);
-// router.post("/", tripController.createTrip);
+// ✅ Apply auth middleware globally (cleaner)
+router.use(protect);
 
-// Get all trips (with query support)
-router.get("/", protect, tripController.getAllTrips);
-// router.get("/", tripController.getAllTrips);
+// ✅ Create trip
+router.post("/", upload.single('image'), tripController.createTrip);
 
-// Get my created trips
-router.get("/me/created", protect, tripController.getMyCreatedTrips);
-// router.get("/me/created", tripController.getMyCreatedTrips);
+// ✅ Get all trips
+router.get("/", tripController.getAllTrips);
 
-// Get trips I joined
-router.get("/me/joined", protect, tripController.getMyJoinedTrips);
-// router.get("/me/joined", tripController.getMyJoinedTrips);
+// ✅ Recommended trips (must be before :id)
+router.get("/recommended", tripController.getRecommendedTrips);
 
-// Get single trip
-router.get("/:id", protect, tripController.getTripById);
-// router.get("/:id", tripController.getTripById);
+// ✅ ⭐ Upcoming trips (NEW - you wanted this)
+router.get("/me/upcoming", tripController.getUpcomingTrips);
 
-// Update trip (only creator check inside controller)
-router.patch("/:id", protect, tripController.updateTrip);
-// router.patch("/:id", tripController.updateTrip);
+// ✅ My created trips
+router.get("/me/created", tripController.getMyCreatedTrips);
 
-// Delete trip (creator or admin check inside controller)
-router.delete("/:id", protect, tripController.deleteTrip);
-// router.delete("/:id", tripController.deleteTrip);
+// ✅ My joined trips
+router.get("/me/joined", tripController.getMyJoinedTrips);
+
+// ✅ Get single trip
+router.get("/:id", tripController.getTripById);
+
+// ✅ Update trip
+router.patch("/:id", upload.single('image'), tripController.updateTrip);
+
+// ✅ Delete trip
+router.delete("/:id", tripController.deleteTrip);
 
 module.exports = router;
